@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-/** 管理员业务门面：账号、活动和报名信息均从这里提供给管理端。 */
 @Service
 public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements AdminService {
 
@@ -42,34 +41,42 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
     }
 
     @Override
-    public List<Admin> findAll() {
+    public List<Admin> findAll(Admin operator) {
+        requireSuperAdmin(operator);
         return list();
     }
 
     @Override
-    public boolean create(Admin admin) {
-        validateAdmin(admin);
-        if (findByUsername(admin.getUsername()) != null) {
+    public boolean create(Admin operator, Admin newAdmin) {
+        requireSuperAdmin(operator);
+        validateAdmin(newAdmin);
+        if (findByUsername(newAdmin.getUsername()) != null) {
             throw new IllegalArgumentException("管理员用户名已存在");
         }
-        return save(admin);
+        return save(newAdmin);
     }
 
     @Override
-    public boolean update(Admin admin) {
-        validateAdmin(admin);
-        if (admin.getId() == null || findById(admin.getId()) == null) {
-            throw new IllegalArgumentException("管理员不存在");
+    public boolean updatePassword(Admin operator, String oldPassword, String newPassword) {
+        requireCurrentAdmin(operator);
+        if (oldPassword == null || !oldPassword.equals(operator.getPassword())) {
+            throw new IllegalArgumentException("旧密码错误");
         }
-        return updateById(admin);
+        validatePassword(newPassword);
+        operator.setPassword(newPassword);
+        return updateById(operator);
     }
 
     @Override
-    public boolean delete(Integer id) {
-        if (findById(id) == null) {
+    public boolean delete(Admin operator, Integer targetAdminId) {
+        requireSuperAdmin(operator);
+        if (operator.getId().equals(targetAdminId)) {
+            throw new IllegalStateException("不能删除当前登录管理员");
+        }
+        if (findById(targetAdminId) == null) {
             throw new IllegalArgumentException("管理员不存在");
         }
-        return removeById(id);
+        return removeById(targetAdminId);
     }
 
     @Override
@@ -98,14 +105,17 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
     }
 
     @Override
-    public Submit findSubmitById(Integer id) {
+    public Submit findSubmitById(Admin operator, Integer id) {
+        requireCurrentAdmin(operator);
         return submitService.findById(id);
     }
 
     @Override
-    public List<Submit> findSubmits() {
+    public List<Submit> findSubmits(Admin operator) {
+        requireCurrentAdmin(operator);
         return submitService.findAll();
     }
+
 
     private void validateAdmin(Admin admin) {
         if (admin == null || blank(admin.getUsername()) || blank(admin.getPassword())) {
@@ -113,6 +123,30 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
         }
         if (admin.getUsername().length() > 20 || admin.getPassword().length() > 20) {
             throw new IllegalArgumentException("管理员用户名或密码超过数据库限制");
+        }
+    }
+
+    private void validatePassword(String password) {
+        if (blank(password)) {
+            throw new IllegalArgumentException("新密码不能为空");
+        }
+        if (password.length() > 20) {
+            throw new IllegalArgumentException("新密码超过数据库限制");
+        }
+    }
+
+    private void requireCurrentAdmin(Admin operator) {
+        if (operator == null || operator.getId() == null || findById(operator.getId()) == null) {
+            throw new IllegalStateException("当前管理员不存在");
+        }
+    }
+
+    private void requireSuperAdmin(Admin operator) {
+        if (operator == null || operator.getId() == null) {
+            throw new IllegalStateException("当前管理员不存在");
+        }
+        if (!Boolean.TRUE.equals(operator.getSupe())) {
+            throw new IllegalStateException("只有超级管理员可以执行此操作");
         }
     }
 

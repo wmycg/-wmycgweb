@@ -14,13 +14,13 @@ public interface AdminService {
 
     Admin authenticate(String username, String password);
 
-    List<Admin> findAll();
+    List<Admin> findAll(Admin operator);
 
-    boolean create(Admin admin);
+    boolean create(Admin operator, Admin newAdmin);
 
-    boolean update(Admin admin);
+    boolean updatePassword(Admin operator, String oldPassword, String newPassword);
 
-    boolean delete(Integer id);
+    boolean delete(Admin operator, Integer targetAdminId);
 
     Event findEventById(Integer id);
 
@@ -32,7 +32,8 @@ public interface AdminService {
 
     boolean deleteEvent(Integer id);
 
-    Submit findSubmitById(Integer id);
+    Submit findSubmitById(Admin operator, Integer id);
 
-    List<Submit> findSubmits();
+    List<Submit> findSubmits(Admin operator);
+
 }

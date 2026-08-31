@@ -13,6 +13,6 @@ public class Submit {
     private String webname;
     private String truename;
     private String ncunum;
-    @TableField("QQ") private String qq;
+    private String QQ;
     private String aimpartment;
 }
