@@ -1,9 +1,11 @@
 <script setup>
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { currentAdmin } from "../data/admins.js";
 
 const headerProps = defineProps({
   activeRoute: { type: String, required: true },
   isNight: { type: Boolean, required: true },
+  isAdmin: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["navigate", "toggle-theme"]);
@@ -72,13 +74,28 @@ onBeforeUnmount(() => {
   delete document.body.dataset.navOpen;
 });
 
-const navItems = [
+const publicNavItems = [
   { id: "home", label: "首页", note: "INDEX" },
   { id: "club", label: "关于社团", note: "ABOUT" },
   { id: "works", label: "部门", note: "PARTMENTS" },
   { id: "events", label: "活动日历", note: "EVENTS" },
   { id: "join", label: "加入我们", note: "JOIN" },
 ];
+
+const adminNavItems = [
+  { id: "admin-events", label: "活动管理", note: "EVENTS" },
+  { id: "admin-submits", label: "查看提交", note: "SUBMITS" },
+  { id: "admin-profile", label: "个人信息", note: "PROFILE" },
+  { id: "admin-managers", label: "管理员", note: "SUPER ONLY" },
+];
+
+const navItems = computed(() =>
+  headerProps.isAdmin
+    ? adminNavItems.filter(
+        (item) => item.id !== "admin-managers" || currentAdmin.value?.supe,
+      )
+    : publicNavItems,
+);
 </script>
 
 <template>

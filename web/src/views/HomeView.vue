@@ -1,12 +1,20 @@
 <script setup>
+import { onMounted } from "vue";
 import logo from "../../image/1757438527327.png";
 import { club } from "../data/club.js";
-import { events } from "../data/events.js";
+import {
+  events,
+  eventsError,
+  eventsLoading,
+  loadEvents,
+} from "../data/events.js";
 import Eyebrow from "../components/Eyebrow.vue";
 import SectionHeading from "../components/SectionHeading.vue";
 import EventCard from "../components/EventCard.vue";
 
 defineEmits(["navigate"]);
+
+onMounted(loadEvents);
 </script>
 
 <template>
@@ -74,7 +82,19 @@ defineEmits(["navigate"]);
         title="接下来，一起做什么？"
         copy="把日期圈起来，现场见。"
       />
-      <div class="event-preview">
+      <p v-if="eventsLoading" class="event-status">正在加载活动……</p>
+      <div v-else-if="eventsError" class="event-status event-status-error">
+        <p>{{ eventsError }}</p>
+        <button
+          class="button button-outline"
+          type="button"
+          @click="loadEvents(true)"
+        >
+          重新加载
+        </button>
+      </div>
+      <p v-else-if="events.length === 0" class="event-status">暂无活动。</p>
+      <div v-else class="event-preview">
         <EventCard
           v-for="(event, index) in events.slice(0, 3)"
           :key="event.id"
@@ -350,6 +370,14 @@ defineEmits(["navigate"]);
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   border-top: 1px solid var(--line);
+}
+.event-status {
+  padding: 28px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.event-status-error p {
+  margin: 0 0 18px;
 }
 .button-outline {
   margin-top: 38px;

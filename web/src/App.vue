@@ -15,6 +15,8 @@ import ClubView from "./views/ClubView.vue";
 import DepartmentsView from "./views/DepartmentsView.vue";
 import EventsView from "./views/EventsView.vue";
 import JoinView from "./views/JoinView.vue";
+import AdminView from "./views/AdminView.vue";
+import { currentAdmin } from "./data/admins.js";
 
 const routeViews = {
   home: HomeView,
@@ -22,10 +24,16 @@ const routeViews = {
   works: DepartmentsView,
   events: EventsView,
   join: JoinView,
+  "admin-events": AdminView,
+  "admin-submits": AdminView,
+  "admin-profile": AdminView,
+  "admin-managers": AdminView,
 };
 
 const route = ref(readRoute());
 const theme = ref(readTheme());
+const isAdminRoute = computed(() => route.value.startsWith("admin-"));
+const isLockedAdmin = computed(() => isAdminRoute.value && !currentAdmin.value);
 const currentView = computed(() => routeViews[route.value] || HomeView);
 const routeMeta = computed(
   () =>
@@ -35,6 +43,10 @@ const routeMeta = computed(
       works: { index: "03", code: "UNITS", title: "DEPARTMENTS" },
       events: { index: "04", code: "EVENTS", title: "SCHEDULE" },
       join: { index: "05", code: "JOIN", title: "OPEN CALL" },
+      "admin-events": { index: "A1", code: "EVENTS", title: "ADMIN CONSOLE" },
+      "admin-submits": { index: "A2", code: "SUBMITS", title: "ADMIN CONSOLE" },
+      "admin-profile": { index: "A3", code: "PROFILE", title: "ADMIN CONSOLE" },
+      "admin-managers": { index: "A4", code: "ADMINS", title: "ADMIN CONSOLE" },
     })[route.value] || { index: "01", code: "INDEX", title: "BASE CAMP" },
 );
 
@@ -42,6 +54,12 @@ let pageTimeline;
 
 function readRoute() {
   const value = window.location.hash.slice(1);
+  const isAdminPath = window.location.pathname.replace(/\/+$/, "").endsWith("/admin");
+  if (isAdminPath) {
+    return value.startsWith("admin-") && routeViews[value]
+      ? value
+      : "admin-events";
+  }
   return routeViews[value] ? value : "home";
 }
 
@@ -55,8 +73,11 @@ function readTheme() {
 
 function navigate(nextRoute) {
   const next = routeViews[nextRoute] ? nextRoute : "home";
-  if (window.location.hash !== `#${next}`)
-    window.history.pushState({}, "", `#${next}`);
+  const nextIsAdmin = next.startsWith("admin-");
+  const nextUrl = nextIsAdmin ? `/admin#${next}` : `/#${next}`;
+  if (`${window.location.pathname}${window.location.hash}` !== nextUrl) {
+    window.history.pushState({}, "", nextUrl);
+  }
   route.value = next;
 }
 
@@ -86,6 +107,10 @@ async function animatePage() {
     works: ".department-card",
     events: ".event-card",
     join: ".join-visual",
+    "admin-events": ".admin-hero",
+    "admin-submits": ".admin-hero",
+    "admin-profile": ".admin-hero",
+    "admin-managers": ".admin-hero",
   }[page];
 
   pageTimeline = gsap.timeline({ defaults: { ease: "power2.out" } });
@@ -127,13 +152,15 @@ onBeforeUnmount(() => {
 <template>
   <div class="app-shell">
     <SiteHeader
+      v-if="!isLockedAdmin"
       :active-route="route"
       :is-night="theme === 'night'"
+      :is-admin="isAdminRoute"
       @navigate="navigate"
       @toggle-theme="toggleTheme"
     />
     <div class="screen-shell">
-      <div class="screen-topline">
+      <div v-if="!isLockedAdmin" class="screen-topline">
         <span>{{ routeMeta.index }} / LF-26</span>
         <span class="screen-topline-center"
           >MICRO LIGHT ANIME COMMUNITY // {{ routeMeta.title }}</span
@@ -146,7 +173,7 @@ onBeforeUnmount(() => {
         <component :is="currentView" :key="route" @navigate="navigate" />
       </Transition>
     </div>
-    <SiteFooter />
+    <SiteFooter v-if="!isLockedAdmin" />
   </div>
 </template>
 

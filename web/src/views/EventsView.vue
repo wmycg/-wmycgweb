@@ -1,8 +1,16 @@
 <script setup>
-import { events } from "../data/events.js";
+import { onMounted } from "vue";
+import {
+  events,
+  eventsError,
+  eventsLoading,
+  loadEvents,
+} from "../data/events.js";
 import Eyebrow from "../components/Eyebrow.vue";
 import EventCard from "../components/EventCard.vue";
 import SectionHeading from "../components/SectionHeading.vue";
+
+onMounted(loadEvents);
 </script>
 
 <template>
@@ -17,8 +25,25 @@ import SectionHeading from "../components/SectionHeading.vue";
     </section>
     <section class="calendar page-section">
       <SectionHeading kicker="FALL" title="把日期圈起来。" />
-      <div class="event-list">
-        <EventCard v-for="event in events" :key="event.id" :event="event" />
+      <p v-if="eventsLoading" class="event-status">正在加载活动……</p>
+      <div v-else-if="eventsError" class="event-status event-status-error">
+        <p>{{ eventsError }}</p>
+        <button
+          class="button button-outline"
+          type="button"
+          @click="loadEvents(true)"
+        >
+          重新加载
+        </button>
+      </div>
+      <p v-else-if="events.length === 0" class="event-status">暂无活动。</p>
+      <div v-else class="event-list">
+        <EventCard
+          v-for="(event, index) in events"
+          :key="event.id"
+          :event="event"
+          :index="index"
+        />
       </div>
     </section>
   </main>
@@ -134,6 +159,14 @@ import SectionHeading from "../components/SectionHeading.vue";
 }
 .event-list {
   border-top: 1px solid var(--line);
+}
+.event-status {
+  padding: 28px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+.event-status-error p {
+  margin: 0 0 18px;
 }
 @media (max-width: 880px) {
   .inner-hero {
