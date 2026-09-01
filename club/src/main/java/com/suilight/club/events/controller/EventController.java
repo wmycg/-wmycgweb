@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/** 公开活动查询接口。 */
 @RestController
 @RequestMapping("/api/events")
 public class EventController {

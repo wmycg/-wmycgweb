@@ -4,6 +4,7 @@ import com.suilight.club.admin.entity.Admin;
 import com.suilight.club.admin.service.AdminService;
 import com.suilight.club.events.entity.Event;
 import com.suilight.club.events.service.EventService;
+import com.suilight.club.logs.service.LogService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -22,29 +23,43 @@ public class AdminEventController {
 
     private final EventService eventService;
     private final AdminService adminService;
+    private final LogService logService;
 
-    public AdminEventController(EventService eventService, AdminService adminService) {
+    public AdminEventController(EventService eventService, AdminService adminService, LogService logService) {
         this.eventService = eventService;
         this.adminService = adminService;
+        this.logService = logService;
     }
 
     @PostMapping
     public boolean create(@RequestBody Event event, HttpSession session) {
-        currentAdmin(session);
-        return eventService.create(event);
+        Admin admin = currentAdmin(session);
+        boolean success = eventService.create(event);
+        if (success) {
+            logService.record(admin, "新增活动" + (event.getId() == null ? "" : "（ID:" + event.getId() + "）"));
+        }
+        return success;
     }
 
     @PutMapping("/{id}")
     public boolean update(@PathVariable Integer id, @RequestBody Event event, HttpSession session) {
-        currentAdmin(session);
+        Admin admin = currentAdmin(session);
         event.setId(id);
-        return eventService.update(event);
+        boolean success = eventService.update(event);
+        if (success) {
+            logService.record(admin, "修改活动（ID:" + id + "）");
+        }
+        return success;
     }
 
     @DeleteMapping("/{id}")
     public boolean delete(@PathVariable Integer id, HttpSession session) {
-        currentAdmin(session);
-        return eventService.delete(id);
+        Admin admin = currentAdmin(session);
+        boolean success = eventService.delete(id);
+        if (success) {
+            logService.record(admin, "删除活动（ID:" + id + "）");
+        }
+        return success;
     }
 
     private Admin currentAdmin(HttpSession session) {

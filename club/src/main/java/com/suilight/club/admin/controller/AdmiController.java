@@ -6,6 +6,8 @@ import com.suilight.club.admin.dto.UpdatePasswordRequest;
 import com.suilight.club.admin.entity.Admin;
 import com.suilight.club.admin.service.AdminService;
 import com.suilight.club.admin.vo.AdminVO;
+import com.suilight.club.logs.entity.Log;
+import com.suilight.club.logs.service.LogService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,9 +28,11 @@ public class AdmiController {
     private static final String ADMIN_ID = "adminId";
 
     private final AdminService adminService;
+    private final LogService logService;
 
-    public AdmiController(AdminService adminService) {
+    public AdmiController(AdminService adminService, LogService logService) {
         this.adminService = adminService;
+        this.logService = logService;
     }
 
     @PostMapping("/login")
@@ -38,22 +42,38 @@ public class AdmiController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "用户名或密码错误");
         }
         session.setAttribute(ADMIN_ID, admin.getId());
+        logService.record(admin, "管理员登录");
         return AdminVO.from(admin);
     }
 
     @PostMapping("/logout")
     public void logout(HttpSession session) {
+        Object id = session.getAttribute(ADMIN_ID);
+        if (id instanceof Integer adminId) {
+            Admin admin = adminService.findById(adminId);
+            if (admin != null) {
+                logService.record(admin, "管理员退出登录");
+            }
+        }
         session.invalidate();
     }
 
     @PostMapping("/password")
     public boolean updatePassword(@RequestBody UpdatePasswordRequest request, HttpSession session) {
-        return adminService.updatePassword(currentAdmin(session), request.getOldPassword(), request.getNewPassword());
+        Admin admin = currentAdmin(session);
+        boolean success = adminService.updatePassword(admin, request.getOldPassword(), request.getNewPassword());
+        if (success) {
+            logService.record(admin, "修改管理员密码");
+        }
+        return success;
     }
 
     @GetMapping("/admins")
     public List<AdminVO> findAll(HttpSession session) {
-        return adminService.findAll(currentAdmin(session)).stream().map(AdminVO::from).toList();
+        Admin admin = currentAdmin(session);
+        List<AdminVO> admins = adminService.findAll(admin).stream().map(AdminVO::from).toList();
+        logService.record(admin, "查看管理员列表");
+        return admins;
     }
 
     @PostMapping("/admins")
@@ -62,12 +82,32 @@ public class AdmiController {
         newAdmin.setUsername(request.getUsername());
         newAdmin.setPassword(request.getPassword());
         newAdmin.setSupe(request.getSupe());
-        return adminService.create(currentAdmin(session), newAdmin);
+        Admin admin = currentAdmin(session);
+        boolean success = adminService.create(admin, newAdmin);
+        if (success) {
+            logService.record(admin, "新增管理员（ID:" + newAdmin.getId() + "）");
+        }
+        return success;
     }
 
     @DeleteMapping("/admins/{id}")
     public boolean delete(@PathVariable Integer id, HttpSession session) {
-        return adminService.delete(currentAdmin(session), id);
+        Admin admin = currentAdmin(session);
+        boolean success = adminService.delete(admin, id);
+        if (success) {
+            logService.record(admin, "删除管理员（ID:" + id + "）");
+        }
+        return success;
+    }
+
+    /** 只有超级管理员可以查看活动操作日志。 */
+    @GetMapping("/logs")
+    public List<Log> findLogs(HttpSession session) {
+        Admin admin = currentAdmin(session);
+        if (!Boolean.TRUE.equals(admin.getSupe())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "只有超级管理员可以查看操作日志");
+        }
+        return logService.findAll(admin);
     }
 
     private Admin currentAdmin(HttpSession session) {

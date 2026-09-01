@@ -2,6 +2,7 @@ package com.suilight.club.admin.controller;
 
 import com.suilight.club.admin.entity.Admin;
 import com.suilight.club.admin.service.AdminService;
+import com.suilight.club.logs.service.LogService;
 import com.suilight.club.submit.entity.Submit;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -19,19 +20,27 @@ import java.util.List;
 public class AdminSubmitController {
 
     private final AdminService adminService;
+    private final LogService logService;
 
-    public AdminSubmitController(AdminService adminService) {
+    public AdminSubmitController(AdminService adminService, LogService logService) {
         this.adminService = adminService;
+        this.logService = logService;
     }
 
     @GetMapping
     public List<Submit> findAll(HttpSession session) {
-        return adminService.findSubmits(currentAdmin(session));
+        Admin admin = currentAdmin(session);
+        List<Submit> submits = adminService.findSubmits(admin);
+        logService.record(admin, "查看报名信息列表");
+        return submits;
     }
 
     @GetMapping("/{id}")
     public Submit findById(@PathVariable Integer id, HttpSession session) {
-        return adminService.findSubmitById(currentAdmin(session), id);
+        Admin admin = currentAdmin(session);
+        Submit submit = adminService.findSubmitById(admin, id);
+        logService.record(admin, "查看报名信息（ID:" + id + "）");
+        return submit;
     }
 
     private Admin currentAdmin(HttpSession session) {
