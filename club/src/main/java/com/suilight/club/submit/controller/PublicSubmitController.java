@@ -1,7 +1,8 @@
 package com.suilight.club.submit.controller;
 
-import com.suilight.club.submit.entity.Submit;
+import com.suilight.club.submit.dto.SubmitCreateRequest;
 import com.suilight.club.submit.service.SubmitService;
+import com.suilight.club.submit.vo.SubmitReceiptVO;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,7 +20,9 @@ public class PublicSubmitController {
     }
 
     @PostMapping
-    public boolean create(@RequestBody Submit submit) {
-        return submitService.create(submit);
+    public SubmitReceiptVO create(@RequestBody SubmitCreateRequest request) {
+        var submit = request.toEntity();
+        submitService.create(submit);
+        return SubmitReceiptVO.from(submit);
     }
 }

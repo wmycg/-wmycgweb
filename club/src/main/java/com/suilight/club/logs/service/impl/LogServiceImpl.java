@@ -30,10 +30,18 @@ public class LogServiceImpl extends ServiceImpl<LogMapper, Log> implements LogSe
     }
 
     @Override
-    public List<Log> findAll(Admin operator) {
+    public List<Log> findAll(Admin operator, String username, LocalDateTime start, LocalDateTime end) {
         if (operator == null || operator.getId() == null || !Boolean.TRUE.equals(operator.getSupe())) {
             throw new IllegalStateException("只有超级管理员可以查看操作日志");
         }
-        return list(new LambdaQueryWrapper<Log>().orderByDesc(Log::getDate).orderByDesc(Log::getId));
+        if (start != null && end != null && start.isAfter(end)) {
+            throw new IllegalArgumentException("开始时间不能晚于结束时间");
+        }
+        return list(new LambdaQueryWrapper<Log>()
+                .eq(username != null && !username.isBlank(), Log::getUsername, username)
+                .ge(start != null, Log::getDate, start)
+                .le(end != null, Log::getDate, end)
+                .orderByDesc(Log::getDate)
+                .orderByDesc(Log::getId));
     }
 }

@@ -4,6 +4,7 @@ import com.suilight.club.admin.entity.Admin;
 import com.suilight.club.admin.service.AdminService;
 import com.suilight.club.logs.service.LogService;
 import com.suilight.club.submit.entity.Submit;
+import com.suilight.club.submit.vo.SubmitVO;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,19 +29,22 @@ public class AdminSubmitController {
     }
 
     @GetMapping
-    public List<Submit> findAll(HttpSession session) {
+    public List<SubmitVO> findAll(HttpSession session) {
         Admin admin = currentAdmin(session);
         List<Submit> submits = adminService.findSubmits(admin);
         logService.record(admin, "查看报名信息列表");
-        return submits;
+        return submits.stream().map(SubmitVO::from).toList();
     }
 
     @GetMapping("/{id}")
-    public Submit findById(@PathVariable Integer id, HttpSession session) {
+    public SubmitVO findById(@PathVariable Integer id, HttpSession session) {
         Admin admin = currentAdmin(session);
         Submit submit = adminService.findSubmitById(admin, id);
+        if (submit == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "报名记录不存在");
+        }
         logService.record(admin, "查看报名信息（ID:" + id + "）");
-        return submit;
+        return SubmitVO.from(submit);
     }
 
     private Admin currentAdmin(HttpSession session) {

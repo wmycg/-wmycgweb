@@ -2,10 +2,13 @@ package com.suilight.club.events.controller;
 
 import com.suilight.club.events.entity.Event;
 import com.suilight.club.events.service.EventService;
+import com.suilight.club.events.vo.EventVO;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -20,12 +23,16 @@ public class EventController {
     }
 
     @GetMapping
-    public List<Event> findAll() {
-        return eventService.findAll();
+    public List<EventVO> findAll() {
+        return eventService.findAll().stream().map(EventVO::from).toList();
     }
 
     @GetMapping("/{id}")
-    public Event findById(@PathVariable Integer id) {
-        return eventService.findById(id);
+    public EventVO findById(@PathVariable Integer id) {
+        Event event = eventService.findById(id);
+        if (event == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "活动不存在");
+        }
+        return EventVO.from(event);
     }
 }

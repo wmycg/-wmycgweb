@@ -5,6 +5,4 @@ public interface SubmitService {
     Submit findById(Integer id);
     List<Submit> findAll();
     boolean create(Submit submit);
-    boolean update(Submit submit);
-    boolean delete(Integer id);
 }

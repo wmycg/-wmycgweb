@@ -36,8 +36,11 @@ public class AdminServiceImpl extends ServiceImpl<AdminMapper, Admin> implements
 
     @Override
     public Admin authenticate(String username, String password) {
+        if (blank(username) || blank(password)) {
+            return null;
+        }
         Admin admin = findByUsername(username);
-        return admin != null && password != null && password.equals(admin.getPassword()) ? admin : null;
+        return admin != null && password.equals(admin.getPassword()) ? admin : null;
     }
 
     @Override

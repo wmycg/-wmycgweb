@@ -8,12 +8,13 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 
-/** 管理员活动操作日志。 */
+/** 管理员操作日志。 */
 @Data
 @TableName("logs")
 public class Log {
     @TableId(type = IdType.AUTO)
     private Integer id;
+    @TableField("date")
     private LocalDateTime date;
     private String username;
     @TableField("losimformation")

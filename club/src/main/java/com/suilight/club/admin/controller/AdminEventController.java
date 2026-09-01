@@ -2,8 +2,9 @@ package com.suilight.club.admin.controller;
 
 import com.suilight.club.admin.entity.Admin;
 import com.suilight.club.admin.service.AdminService;
-import com.suilight.club.events.entity.Event;
+import com.suilight.club.events.dto.EventSaveRequest;
 import com.suilight.club.events.service.EventService;
+import com.suilight.club.events.vo.EventVO;
 import com.suilight.club.logs.service.LogService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.http.HttpStatus;
@@ -32,24 +33,25 @@ public class AdminEventController {
     }
 
     @PostMapping
-    public boolean create(@RequestBody Event event, HttpSession session) {
+    public EventVO create(@RequestBody EventSaveRequest request, HttpSession session) {
         Admin admin = currentAdmin(session);
+        var event = request.toEntity(null);
         boolean success = eventService.create(event);
         if (success) {
             logService.record(admin, "新增活动" + (event.getId() == null ? "" : "（ID:" + event.getId() + "）"));
         }
-        return success;
+        return EventVO.from(event);
     }
 
     @PutMapping("/{id}")
-    public boolean update(@PathVariable Integer id, @RequestBody Event event, HttpSession session) {
+    public EventVO update(@PathVariable Integer id, @RequestBody EventSaveRequest request, HttpSession session) {
         Admin admin = currentAdmin(session);
-        event.setId(id);
+        var event = request.toEntity(id);
         boolean success = eventService.update(event);
         if (success) {
             logService.record(admin, "修改活动（ID:" + id + "）");
         }
-        return success;
+        return EventVO.from(event);
     }
 
     @DeleteMapping("/{id}")

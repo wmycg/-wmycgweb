@@ -5,6 +5,7 @@ import com.suilight.club.submit.mapper.SubmitMapper;
 import com.suilight.club.submit.service.SubmitService;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.time.LocalDateTime;
 @Service
 public class SubmitServiceImpl extends ServiceImpl<SubmitMapper, Submit> implements SubmitService {
     public Submit findById(Integer id) {
@@ -15,16 +16,10 @@ public class SubmitServiceImpl extends ServiceImpl<SubmitMapper, Submit> impleme
     }
     public boolean create(Submit submit) {
         validate(submit);
+        if (submit.getDate() == null) {
+            submit.setDate(LocalDateTime.now());
+        }
         return save(submit);
-    }
-    public boolean update(Submit submit) {
-        validate(submit); if (submit.getId() == null || getById(submit.getId()) == null)
-            throw new IllegalArgumentException("报名记录不存在");
-        return updateById(submit);
-    }
-    public boolean delete(Integer id) {
-        if (getById(id) == null) throw new IllegalArgumentException("报名记录不存在");
-        return removeById(id);
     }
     private void validate(Submit s)
     {
