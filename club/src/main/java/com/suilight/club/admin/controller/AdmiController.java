@@ -57,6 +57,11 @@ public class AdmiController {
         session.invalidate();
     }
 
+    @GetMapping("/me")
+    public AdminVO me(HttpSession session) {
+        return AdminVO.from(currentAdmin(session));
+    }
+
     @PostMapping("/password")
     public boolean updatePassword(@RequestBody UpdatePasswordRequest request, HttpSession session) {
         Admin admin = currentAdmin(session);

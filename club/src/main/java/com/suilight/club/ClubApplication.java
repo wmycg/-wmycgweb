@@ -5,7 +5,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("com.suilight.club")
+@MapperScan({
+        "com.suilight.club.admin.mapper",
+        "com.suilight.club.events.mapper",
+        "com.suilight.club.submit.mapper",
+        "com.suilight.club.logs.mapper"
+})
 public class ClubApplication {
 
     public static void main(String[] args) {

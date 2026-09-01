@@ -8,7 +8,7 @@ public class SubmitCreateRequest {
     private String webname;
     private String truename;
     private String ncunum;
-    private String qq;
+    private String QQ;
     private String aimpartment;
 
     public Submit toEntity() {
@@ -16,7 +16,7 @@ public class SubmitCreateRequest {
         submit.setWebname(webname);
         submit.setTruename(truename);
         submit.setNcunum(ncunum);
-        submit.setQQ(qq);
+        submit.setQQ(QQ);
         submit.setAimpartment(aimpartment);
         return submit;
     }

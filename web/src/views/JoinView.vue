@@ -73,9 +73,8 @@ async function submit() {
           <span class="join-action-note">约 2 分钟完成</span>
         </aside>
         <figure class="join-visual">
-          <div class="join-visual-meta"><span>GROUP ACCESS</span><span>05—26</span></div>
-          <div class="join-poster-frame"><img :src="joinPoster" alt="微光漫摄 QQ 群二维码海报" /></div>
-          <figcaption><span>SCAN TO JOIN</span><p>扫码加入群聊，和同频的人在线见面。</p></figcaption>
+          <img :src="joinPoster" alt="微光漫摄 QQ 群二维码海报" />
+          <figcaption>扫码加入群聊，和同频的人在线见面。</figcaption>
         </figure>
       </div>
     </section>
@@ -212,10 +211,12 @@ async function submit() {
   color: #f0cfc0;
 }
 .join-grid {
-  max-width: 1240px;
+  width: 100%;
+  max-width: none;
+  margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(340px, 1.12fr);
-  gap: clamp(56px, 9vw, 150px);
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 420px) minmax(360px, 0.86fr);
+  gap: clamp(36px, 4.5vw, 84px);
   position: relative;
 }
 .join-grid::before {
@@ -298,13 +299,13 @@ async function submit() {
   font: 11px var(--sans);
 }
 .join-side {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(220px, 0.92fr) minmax(170px, 0.68fr);
-  align-items: end;
-  gap: 18px;
+  display: contents;
 }
 .join-application {
+  grid-column: 3;
+  grid-row: 1;
+  width: min(100%, 500px);
+  justify-self: start;
   min-height: 100%;
   padding: 24px 22px 22px;
   display: flex;
@@ -514,9 +515,11 @@ async function submit() {
 .form-error { color: var(--coral-dark); }
 .form-success { color: #357d74; }
 .join-visual {
-  width: min(100%, 460px);
+  grid-column: 2;
+  grid-row: 1;
+  width: min(100%, 420px);
   margin: 0;
-  padding: 18px 18px 16px;
+  padding: clamp(10px, 1.4vw, 16px);
   position: relative;
   justify-self: end;
   overflow: hidden;
@@ -525,72 +528,58 @@ async function submit() {
   box-shadow: 12px 12px 0 var(--coral-dark);
   clip-path: polygon(0 0, 96% 0, 100% 4%, 100% 100%, 4% 100%, 0 96%);
 }
-.join-visual-meta {
-  padding: 0 2px 14px;
-  display: flex;
-  justify-content: space-between;
-  color: rgba(255, 255, 255, 0.62);
-  font: 8px var(--mono);
-  letter-spacing: 0.12em;
-}
-.join-visual-meta span:last-child {
-  color: var(--cyan);
-}
-.join-poster-frame {
-  position: relative;
-  overflow: hidden;
-  background: #19191a;
-}
-.join-poster-frame::after {
-  content: "SCAN / CONNECT";
+.join-visual::before,
+.join-visual::after {
   position: absolute;
-  right: 18px;
-  bottom: 16px;
-  color: var(--cyan);
+  z-index: 2;
   font: 8px var(--mono);
   letter-spacing: 0.12em;
+}
+.join-visual::before {
+  content: "JOIN / 2026";
+  top: 24px;
+  right: 24px;
+  color: rgba(255, 255, 255, 0.62);
+}
+.join-visual::after {
+  content: "SCAN / CONNECT";
+  right: 22px;
+  bottom: 52px;
+  color: var(--cyan);
 }
 .join-visual img {
   width: 100%;
   height: auto;
-  aspect-ratio: 0.64;
+  aspect-ratio: 0.6;
   display: block;
   object-fit: contain;
 }
 .join-visual figcaption {
-  margin: 15px 2px 1px;
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
+  margin: 13px 4px 2px;
   color: rgba(255, 255, 255, 0.68);
   font-size: 11px;
   line-height: 1.6;
-}
-.join-visual figcaption > span {
-  flex: 0 0 auto;
-  color: var(--cyan);
-  font: 8px var(--mono);
-  letter-spacing: 0.12em;
-}
-.join-visual figcaption p {
-  margin: 0;
-  text-align: right;
 }
 @media (max-width: 880px) {
   .inner-hero {
     clip-path: polygon(0 0, 96% 0, 100% 5%, 100% 100%, 4% 100%, 0 95%);
   }
   .join-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 0.85fr);
     gap: 56px;
   }
   .join-copy {
     padding-top: 12px;
+    grid-column: 1 / -1;
   }
   .join-visual {
     justify-self: center;
+    grid-column: 1;
+    grid-row: 2;
   }
   .join-application {
+    grid-column: 2;
+    grid-row: 2;
     padding: 22px 18px 20px;
   }
 }
@@ -635,10 +624,11 @@ async function submit() {
     gap: 3px;
   }
   .join-side {
-    grid-template-columns: 1fr;
-    gap: 34px;
+    display: contents;
   }
   .join-application {
+    grid-column: 1;
+    grid-row: 3;
     min-height: 0;
     padding: 22px 18px 20px;
   }
@@ -646,18 +636,12 @@ async function submit() {
     margin-top: 10px;
   }
   .join-visual {
+    grid-column: 1;
+    grid-row: 2;
     width: min(100%, 430px);
     margin: 0 auto;
     justify-self: stretch;
     box-shadow: 8px 8px 0 var(--coral-dark);
-  }
-  .join-visual figcaption {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-  }
-  .join-visual figcaption p {
-    text-align: left;
   }
   .modal-panel {
     padding: 22px 18px;
