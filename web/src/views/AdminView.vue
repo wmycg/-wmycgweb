@@ -26,6 +26,8 @@ import {
 import {
   getSubmit,
   loadSubmits,
+  submitDetailError,
+  submitDetailLoading,
   submitError,
   submitLoading,
   submits,
@@ -86,8 +88,10 @@ async function submitLogin() {
 }
 
 async function openSubmit(submit) {
-  selectedSubmit.value = await getSubmit(submit.id);
-  if (selectedSubmit.value) modal.value = "submit";
+  selectedSubmit.value = submit;
+  modal.value = "submit";
+  const detail = await getSubmit(submit.id);
+  if (detail) selectedSubmit.value = detail;
 }
 
 async function saveAdmin() {
@@ -149,8 +153,8 @@ onMounted(async () => {
         </div>
         <p v-if="eventsLoading" class="admin-state">正在同步活动……</p>
         <p v-else-if="eventsError" class="admin-state admin-state-error">{{ eventsError }}</p>
-        <p v-else-if="events.length === 0" class="admin-state">暂无活动记录。</p>
         <div v-else class="admin-event-grid">
+          <p v-if="events.length === 0" class="admin-state admin-event-empty">暂无活动记录，先添加一个活动吧。</p>
           <article v-for="event in events" :key="event.id" class="admin-event-card">
             <span class="admin-card-code">EVENT / {{ event.id }}</span>
             <strong>{{ event.title }}</strong>
@@ -204,7 +208,7 @@ onMounted(async () => {
         <button v-if="modal !== 'login'" class="admin-modal-close" type="button" aria-label="关闭窗口" @click="closeModal">×</button>
         <template v-if="modal === 'login'"><span class="admin-kicker">SECURE ACCESS</span><h2>管理员登录</h2><form @submit.prevent="submitLogin"><label>用户名<input v-model.trim="loginForm.username" required /></label><label>密码<div class="password-field"><input v-model="loginForm.password" required :type="loginPasswordVisible ? 'text' : 'password'" /><button class="password-toggle" type="button" :aria-pressed="loginPasswordVisible" @click="loginPasswordVisible = !loginPasswordVisible">{{ loginPasswordVisible ? "隐藏" : "显示" }}</button></div></label><p v-if="adminError" class="admin-form-error">{{ adminError }}</p><button class="button button-primary" type="submit" :disabled="adminMutating">进入工作台</button></form></template>
         <template v-else-if="modal === 'event'"><span class="admin-kicker">EVENT RECORD</span><h2>{{ editingEventId ? "编辑活动" : "添加活动" }}</h2><form @submit.prevent="saveEvent"><label>日期<input v-model.trim="eventForm.date" required maxlength="20" /></label><label>标题<input v-model.trim="eventForm.title" required maxlength="20" /></label><label>地点<input v-model.trim="eventForm.place" required maxlength="20" /></label><label>简介<textarea v-model.trim="eventForm.brief" required maxlength="300"></textarea></label><p v-if="eventsError" class="admin-form-error">{{ eventsError }}</p><button class="button button-primary" type="submit" :disabled="eventsMutating">保存活动</button></form></template>
-        <template v-else-if="modal === 'submit'"><span class="admin-kicker">APPLICATION DETAIL</span><h2>申请详情</h2><dl class="submit-detail"><div><dt>网名</dt><dd>{{ selectedSubmit?.webname }}</dd></div><div><dt>姓名</dt><dd>{{ selectedSubmit?.truename }}</dd></div><div><dt>学号</dt><dd>{{ selectedSubmit?.ncunum }}</dd></div><div><dt>QQ</dt><dd>{{ selectedSubmit?.qq }}</dd></div><div><dt>意向部门</dt><dd>{{ selectedSubmit?.aimpartment }}</dd></div></dl></template>
+        <template v-else-if="modal === 'submit'"><span class="admin-kicker">APPLICATION DETAIL</span><h2>申请详情</h2><p v-if="submitDetailLoading" class="admin-state">正在读取详情……</p><p v-else-if="submitDetailError" class="admin-form-error">{{ submitDetailError }}</p><dl v-else class="submit-detail"><div><dt>网名</dt><dd>{{ selectedSubmit?.webname || "—" }}</dd></div><div><dt>姓名</dt><dd>{{ selectedSubmit?.truename || "—" }}</dd></div><div><dt>学号</dt><dd>{{ selectedSubmit?.ncunum || "—" }}</dd></div><div><dt>QQ</dt><dd>{{ selectedSubmit?.qq || "—" }}</dd></div><div><dt>意向部门</dt><dd>{{ selectedSubmit?.aimpartment || "—" }}</dd></div></dl></template>
         <template v-else-if="modal === 'password'"><span class="admin-kicker">PROFILE UPDATE</span><h2>修改密码</h2><form @submit.prevent="savePassword"><label>旧密码<div class="password-field"><input v-model="passwordForm.oldPassword" required :type="oldPasswordVisible ? 'text' : 'password'" /><button class="password-toggle" type="button" :aria-pressed="oldPasswordVisible" @click="oldPasswordVisible = !oldPasswordVisible">{{ oldPasswordVisible ? "隐藏" : "显示" }}</button></div></label><label>新密码<div class="password-field"><input v-model="passwordForm.newPassword" required :type="newPasswordVisible ? 'text' : 'password'" /><button class="password-toggle" type="button" :aria-pressed="newPasswordVisible" @click="newPasswordVisible = !newPasswordVisible">{{ newPasswordVisible ? "隐藏" : "显示" }}</button></div></label><p v-if="adminError" class="admin-form-error">{{ adminError }}</p><button class="button button-primary" type="submit" :disabled="adminMutating">更新密码</button></form></template>
         <template v-else-if="modal === 'admin'"><span class="admin-kicker">ADMIN RECORD</span><h2>添加管理员</h2><form @submit.prevent="saveAdmin"><label>用户名<input v-model.trim="adminForm.username" required maxlength="20" /></label><label>密码<div class="password-field"><input v-model="adminForm.password" required maxlength="20" :type="adminPasswordVisible ? 'text' : 'password'" /><button class="password-toggle" type="button" :aria-pressed="adminPasswordVisible" @click="adminPasswordVisible = !adminPasswordVisible">{{ adminPasswordVisible ? "隐藏" : "显示" }}</button></div></label><label class="check-label"><input v-model="adminForm.supe" type="checkbox" /> 超级管理员</label><p v-if="adminError" class="admin-form-error">{{ adminError }}</p><button class="button button-primary" type="submit" :disabled="adminMutating">创建管理员</button></form></template>
       </section>
@@ -229,6 +233,7 @@ onMounted(async () => {
 .admin-section h2 { margin:10px 0 0; font:500 clamp(30px,4vw,50px) var(--serif); }
 .admin-count { color:var(--muted); font:9px var(--mono); letter-spacing:.1em; }
 .admin-event-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; }
+.admin-event-empty { grid-column:1 / -1; margin:0; padding:10px 0 4px; }
 .admin-event-card, .admin-add-card { min-height:190px; padding:22px; border:1px solid var(--line); background:var(--soft-band); display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
 .admin-event-card strong { margin:15px 0 8px; color:var(--ink); font:500 24px var(--serif); }
 .admin-event-card p { margin:0 0 14px; color:var(--coral-dark); font:10px var(--mono); }

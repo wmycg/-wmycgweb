@@ -7,6 +7,8 @@ export const submits = ref([]);
 export const submitLoading = ref(false);
 export const submitError = ref("");
 export const submitReceipt = ref(null);
+export const submitDetailLoading = ref(false);
+export const submitDetailError = ref("");
 
 async function parseResponse(response) {
   const contentType = response.headers.get("content-type") || "";
@@ -79,15 +81,16 @@ export async function loadSubmits(force = false) {
 }
 
 export async function getSubmit(id) {
-  submitLoading.value = true;
-  submitError.value = "";
+  submitDetailLoading.value = true;
+  submitDetailError.value = "";
 
   try {
     return await request(`${ADMIN_SUBMITS_URL}/${id}`);
   } catch (error) {
-    submitError.value = error instanceof Error ? error.message : "提交详情加载失败";
+    submitDetailError.value =
+      error instanceof Error ? error.message : "提交详情加载失败";
     return null;
   } finally {
-    submitLoading.value = false;
+    submitDetailLoading.value = false;
   }
 }
