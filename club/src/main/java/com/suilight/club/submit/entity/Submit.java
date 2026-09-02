@@ -13,6 +13,8 @@ public class Submit {
     private String webname;
     private String truename;
     private String ncunum;
+    /** 数据库列名为 QQ，必须显式映射，避免被推导为 q_q。 */
+    @TableField("QQ")
     private String QQ;
     private String aimpartment;
 }

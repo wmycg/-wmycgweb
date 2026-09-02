@@ -14,6 +14,7 @@ public class SubmitServiceImpl extends ServiceImpl<SubmitMapper, Submit> impleme
     public List<Submit> findAll() {
         return list();
     }
+
     public boolean create(Submit submit) {
         validate(submit);
         if (submit.getDate() == null) {
